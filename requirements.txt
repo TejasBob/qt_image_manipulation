@@ -1,0 +1,6 @@
+imutils==0.5.4
+numpy==1.21.4
+opencv-python==4.5.4.60
+PyQt6==6.2.1
+PyQt6-Qt6==6.2.1
+PyQt6-sip==13.1.0

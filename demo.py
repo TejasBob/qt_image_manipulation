@@ -11,11 +11,35 @@ from PyQt6.QtWidgets import QFileDialog
 from PyQt6.QtGui import QImage
 import cv2
 import numpy as np 
+import logging
+import sys
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+ch = logging.StreamHandler(sys.stdout)
+ch.setFormatter(logging.Formatter("%(message)s"))
+logger.addHandler(ch)
+
 
 class Ui_MainWindow(object):
+
+    def __init__(self, path_):
+        self.MAX_WIDTH = 512
+        self.MAX_HEIGHT = 512
+        self.filename = None
+        self.tmp = None
+        self. scale_now = 1
+        self.contrast_value_now = 1
+        self.default_image_path = path_
+        self.image = cv2.imread(default_image_path)
+        img = self.image.copy()
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        self.default_image = QImage(img, img.shape[1],img.shape[0],img.strides[0],QImage.Format.Format_RGB888)
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(464, 463)
+        MainWindow.resize(640, 640)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
@@ -26,13 +50,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("Screen Shot 2021-11-28 at 3.45.02 AM.png"))
-        self.label.setScaledContents(True)
+        self.label.setPixmap(QtGui.QPixmap.fromImage(self.default_image))
+        self.label.setScaledContents(False)
         self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
         self.verticalSlider = QtWidgets.QSlider(self.centralwidget)
         self.verticalSlider.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.verticalSlider.setObjectName("verticalSlider")
+        self.verticalSlider.setValue(50)
         self.horizontalLayout.addWidget(self.verticalSlider)
         self.verticalSlider_2 = QtWidgets.QSlider(self.centralwidget)
         self.verticalSlider_2.setOrientation(QtCore.Qt.Orientation.Vertical)
@@ -58,10 +83,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
 
-        self.filename = None
-        self.tmp = None
-        self. scale_now = 0
-        self.contrast_value_now = 0
+        
 
         self.retranslateUi(MainWindow)
         self.verticalSlider.valueChanged['int'].connect(self.scale) # type: ignore
@@ -74,7 +96,7 @@ class Ui_MainWindow(object):
         self.filename = QFileDialog.getOpenFileName(filter="Image (*.*)")[0]
         self.image = cv2.imread(self.filename)
         self.setPhoto(self.image)
-        print(self.filename)
+        logger.info("loaded file: {}".format(self.filename))
 
 
     def retranslateUi(self, MainWindow):
@@ -85,19 +107,17 @@ class Ui_MainWindow(object):
 
 
     def setPhoto(self,image):
-        print("original : ", image.shape)
         self.tmp = image
-        MAX_WIDTH = 320
-        MAX_HEIGHT = 320
+        
         cropped_image = image
-        if image.shape[0]> MAX_HEIGHT and image.shape[1] > MAX_WIDTH:
+        if image.shape[0]> self.MAX_HEIGHT or image.shape[1] > self.MAX_WIDTH:
             if image.shape[1]>image.shape[0]:
                 aspect_ratio = image.shape[1]/image.shape[0]
-                crop_width = MAX_WIDTH
+                crop_width = self.MAX_WIDTH
                 crop_height = int(crop_width/aspect_ratio)
             else:
                 aspect_ratio = image.shape[1]/image.shape[0]
-                crop_height = MAX_HEIGHT
+                crop_height = self.MAX_HEIGHT
                 crop_width = int(crop_height * aspect_ratio)
 
             r_, c_ = image.shape[:2]
@@ -108,34 +128,32 @@ class Ui_MainWindow(object):
 
             cropped_image = image[start_row:end_row, start_col:end_col]
         
-        print("cropped dim : ", cropped_image.shape)
+        logger.info("original: {} \t cropped:  {}".format(image.shape[:2], cropped_image.shape[:2]))
         frame = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB)
         image = QImage(frame, frame.shape[1],frame.shape[0],frame.strides[0],QImage.Format.Format_RGB888)
         self.label.setPixmap(QtGui.QPixmap.fromImage(image))
 
     def scale(self,value):
-        self.scale_now = int(value/10) + 1
+        if value>=50:
+            value-=50
+            self.scale_now = 1 + value/50
+        else:
+            self.scale_now = value/50 + 0.001
         self.update()
         
         
     def contrast_value(self,value):
         self.contrast_value_now = 1 + int(value/10) * 0.1
-        print('Blur: ',value)
+        logger.info('Contrast: {}'.format(value))
         self.update()
     
     
     def changeScale(self,img,value):
-        # hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-        # h,s,v = cv2.split(hsv)
-        # lim = 255 - value
-        # v[v>lim] = 255
-        # v[v<=lim] += value
-        # final_hsv = cv2.merge((h,s,v))
-        # img = cv2.cvtColor(final_hsv,cv2.COLOR_HSV2BGR)
-        print("scale: ", value)
-        tt = cv2.resize(img, (int(img.shape[1] * value), int(img.shape[0] * value)), cv2.INTER_AREA)
-        print(value, tt.shape)
-        return tt
+        logger.info("scale: {}".format(round(value, 2)))
+        new_width = max(1, int(img.shape[1] * value))
+        new_height = max(1, int(img.shape[0] * value))
+        tmp = cv2.resize(img, (new_width, new_height), cv2.INTER_AREA)
+        return tmp
         
     def changeContrast(self,img,value):
         tmp = np.int32(img)
@@ -151,15 +169,15 @@ class Ui_MainWindow(object):
     
     def savePhoto(self):
         filename = QFileDialog.getSaveFileName(filter="JPG(*.jpg);;PNG(*.png);;TIFF(*.tiff);;BMP(*.bmp)")[0]
-        
-        cv2.imwrite(filename,self.tmp)
-        print('Image saved as:',self.filename)
+        if filename:
+            cv2.imwrite(filename,self.tmp)
+            logger.info('Image saved as: {}'.format(self.filename))
 
 if __name__ == "__main__":
-    import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
+    default_image_path = "lena.jpeg" if len(sys.argv)==1 else sys.argv[1]
+    ui = Ui_MainWindow(default_image_path)
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec())

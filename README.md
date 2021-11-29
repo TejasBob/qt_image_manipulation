@@ -15,6 +15,8 @@ I followed these steps to build this project.
 7. Interact with UI through sliders and observe output.
 8. First slider is for adjusting scale of the image. The range of scale is 0x-2x. 0x = (1,1). I used [2] reference for this.
 9. Second slider is for contrast enhancement. The range is from -255 to +255. I used [3] reference for this.
+10. I'm also logging important info to terminal.
+
 
 Add-ons:
 1. This project implements caching mechanism for caching previously resized version of current image. This helps in saving time in `update` method.

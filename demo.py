@@ -25,6 +25,11 @@ ch.setFormatter(logging.Formatter("%(message)s"))
 logger.addHandler(ch)
 
 def imresize_bilinear(original_img, new_h, new_w):
+    '''
+    This is custom implementation of image resize operation.
+    For citation, refer to references in README
+    '''
+
     logger.info("using custom resize function")
     old_h, old_w, ch = original_img.shape
     
@@ -154,6 +159,10 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def set_resize_modes(self, isChecked):
+        '''
+        This method sets the use_optimized flag that decides which method to use for image resize.
+        OpenCV resize implementation is optimized one and hence runs faster faster compared to custom Python implementation
+        '''
         if isChecked:
             logger.info("switched to OpenCV's optimized resize method")
             self.use_optimized = True
@@ -162,7 +171,12 @@ class Ui_MainWindow(object):
             self.use_optimized = False
         return
 
+
     def load_image(self):
+        '''
+        This method opens file explorer to load an image in qt window.
+        '''
+
         self.filename = QFileDialog.getOpenFileName(filter="Image (*.*)")[0]
         self.image = cv2.imread(self.filename)
         self.setPhoto(self.image)
@@ -178,6 +192,13 @@ class Ui_MainWindow(object):
         self.radioButton.setText(_translate("MainWindow", "use_optimized_opencv_resize"))
 
     def setPhoto(self,image):
+        '''
+        This method decides what specific region of image to show in the qt window.
+        Since the images can be of any dimensions, for the sake of simplicity, 
+        if image is bigger than (512, 512) pixels then I'm showing the center-cropped image.
+        self.tmp has the copy of full-resolution processed image.
+        '''
+
         self.tmp = image
         
         cropped_image = image
@@ -205,6 +226,13 @@ class Ui_MainWindow(object):
         self.label.setPixmap(QtGui.QPixmap.fromImage(show_image))
 
     def scale(self,value):
+        '''
+        This method converts slider value into a range of scale values for zoom
+        slider value 50 belongs to scale = 1
+        slider value 100 belongs to scale = 2
+        slider value 0 belongs to scale = 0 [(1,1) size image ]
+        '''
+
         if value>=50:
             value-=50
             self.scale_now = round(1 + value/50, 2)
@@ -214,12 +242,21 @@ class Ui_MainWindow(object):
         
         
     def contrast_value(self,value):
+        '''
+        This method converts slider values from 0-100 to -255 to +255 range.
+        I have mentioned reference material in References section in README.md
+        '''
+
         self.contrast_value_now = round((value - 50) * 5.1, 2)
         logger.info('Contrast: {}'.format(self.contrast_value_now))
         self.update()
     
     
     def changeScale(self,img,value):
+        '''
+        This function handles image resize related work
+        '''
+
         dummy = self.cache.get(value, None)
         if dummy is not None:
             logger.info("found resized image in cache, re-using it, Yay!")
@@ -241,6 +278,11 @@ class Ui_MainWindow(object):
         return tmp
 
     def insert_in_cache(self, key_, data):
+        '''
+        This method inserts image_at_specific_resolution in cache
+        key is image_resolution
+        value is resized image
+        '''
         logger.info("len of cache : {}".format(len(self.cache)))
         if len(self.cache)>=self.cache_threshold:
             key_to_remove = list(self.cache.keys())[0]
@@ -252,6 +294,10 @@ class Ui_MainWindow(object):
         return
         
     def changeContrast(self,img,value):
+        '''
+        This method implements contrast enhancement related code
+        The implementation is from [2] reference in References in README.md
+        '''
         tmp = img.copy()
 
         factor = 259 * (value + 255) / (255 * (259 - value) )
@@ -264,15 +310,22 @@ class Ui_MainWindow(object):
         return tmp
     
     def update(self):
+        '''
+        This method updates UI in qt
+        '''
         img = self.changeScale(self.image,self.scale_now)
         img = self.changeContrast(img,self.contrast_value_now)
         self.setPhoto(img)
     
     def savePhoto(self):
+        '''
+        This method saves manipulated image to disk
+        '''
         filename = QFileDialog.getSaveFileName(filter="JPG(*.jpg);;PNG(*.png);;TIFF(*.tiff);;BMP(*.bmp)")[0]
         if filename:
             cv2.imwrite(filename,self.tmp)
             logger.info('Image saved as: {}'.format(filename))
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

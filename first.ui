@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>464</width>
-    <height>463</height>
+    <width>593</width>
+    <height>656</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0" colspan="3">
+      <item row="0" column="0" colspan="4">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QLabel" name="label">
@@ -25,7 +25,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap>Screen Shot 2021-11-28 at 3.45.02 AM.png</pixmap>
+           <pixmap>lena.png</pixmap>
           </property>
           <property name="scaledContents">
            <bool>true</bool>
@@ -62,7 +62,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
+      <item row="1" column="3">
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -75,6 +75,13 @@
         </property>
        </spacer>
       </item>
+      <item row="1" column="2">
+       <widget class="QRadioButton" name="radioButton">
+        <property name="text">
+         <string>use_optimized_opencv_resize</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -84,7 +91,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>464</width>
+     <width>593</width>
      <height>24</height>
     </rect>
    </property>
@@ -100,8 +107,8 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>413</x>
-     <y>179</y>
+     <x>552</x>
+     <y>217</y>
     </hint>
     <hint type="destinationlabel">
      <x>387</x>
@@ -116,8 +123,8 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>438</x>
-     <y>253</y>
+     <x>579</x>
+     <y>291</y>
     </hint>
     <hint type="destinationlabel">
      <x>382</x>
@@ -132,8 +139,8 @@
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>48</x>
-     <y>403</y>
+     <x>61</x>
+     <y>616</y>
     </hint>
     <hint type="destinationlabel">
      <x>45</x>
@@ -148,12 +155,28 @@
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>133</x>
-     <y>410</y>
+     <x>149</x>
+     <y>616</y>
     </hint>
     <hint type="destinationlabel">
      <x>126</x>
      <y>367</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>radioButton</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>214</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>208</x>
+     <y>552</y>
     </hint>
    </hints>
   </connection>
